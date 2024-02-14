@@ -1,4 +1,7 @@
 import tkinter
+from PIL import Image as IMG
+from customtkinter import CTkImage
+from customtkinter import CTkFont
 import customtkinter
 from tkinter import *
 from tkinter import ttk
@@ -17,20 +20,33 @@ class Game(customtkinter.CTk):
         #Settings
         self.geometry('600x500+500+50')
         self.title('Хрестики-Нолики')
+        self.resizable(False, False)
+        #Fonts
+        titlelabel_font = CTkFont(family='Open San', size=30, weight='bold')
+        buttons_font = CTkFont(family='Open San', size=18, weight='normal')
+        #GameTitle image
+        self.title_image = CTkImage(dark_image=IMG.open('assets/gametitle.png'), size=(450, 200))
+        #Labels
+        self.gameTitle_label = customtkinter.CTkLabel(master=self, text='', image=self.title_image)
         #Buttons properties
-        menubuttons_width = 250
-        menubuttons_height = 120
-        menubuttons_font = ('Arial', 20)
+        menubuttons_width = 220
+        menubuttons_height = 100
+        menubuttons_font = buttons_font
         #Buttons
         self.twoPlayers_button = customtkinter.CTkButton(master=self, text='Грати на одному ПК'.upper(), command=self.twoPlayers, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
         self.playOnline_button = customtkinter.CTkButton(master=self, text='Грати онлайн'.upper(), command=self.playOnline, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
         self.exit_button = customtkinter.CTkButton(master=self, text='Вийти'.upper(), command=self.exitGame, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
+        #Place GameTitle-label
+        self.gameTitle_label.place(relx=0.5, rely=0.1, anchor=customtkinter.CENTER)
         #Place Mainmenu-buttons
-        self.twoPlayers_button.place(relx=0.5, rely=0.2, anchor=customtkinter.CENTER)
-        self.playOnline_button.place(relx=0.5, rely=0.5, anchor=customtkinter.CENTER)
-        self.exit_button.place(relx=0.5, rely=0.8, anchor=customtkinter.CENTER)
+        self.twoPlayers_button.place(relx=0.5, rely=0.35, anchor=customtkinter.CENTER)
+        self.playOnline_button.place(relx=0.5, rely=0.6, anchor=customtkinter.CENTER)
+        self.exit_button.place(relx=0.5, rely=0.85, anchor=customtkinter.CENTER)
         #Vars
-        self.menuobjects = [self.twoPlayers_button, self.playOnline_button, self.exit_button]
+        self.menuobjects = [self.gameTitle_label, self.twoPlayers_button, self.playOnline_button, self.exit_button]
+        self.field_condition = [[None, None, None],
+                                [None, None, None],
+                                [None, None, None]]
         #Create field
         self.field = customtkinter.CTkCanvas(self, width=550, height=550, bg='red')
         self.field.bind('<Button-1>', self.add_X)
@@ -51,22 +67,26 @@ class Game(customtkinter.CTk):
         for i in range(0, 9):
             x = i // 3 * size
             y = i % 3 * size
-            self.field.create_rectangle(x, y, x + size, y + size, width=3, outline='#00BFFF', fill=DARKBLUE, activefill='#FFFAFA')
+            self.field.create_rectangle(x, y, x + size, y + size, width=3, outline='#00BFFF', fill=DARKBLUE, activefill='#165860')
 
     def draw_X(self, column, row):
-        size = 184
-        size_X = 140
-        x = 22 + size * column
-        y = 22 + size * row
-        self.field.create_line(x, y, x + size_X, y + size_X, width=10, fill=LIGHTGREEN)
-        self.field.create_line(x, y + size_X, x + size_X, y, width=10, fill=LIGHTGREEN)
-
+        if self.field_condition[row][column] == None:
+            size = 184
+            size_X = 140
+            x = 22 + size * column
+            y = 22 + size * row
+            self.field.create_line(x, y, x + size_X, y + size_X, width=10, fill=LIGHTGREEN)
+            self.field.create_line(x, y + size_X, x + size_X, y, width=10, fill=LIGHTGREEN)
+            self.field_condition[row][column] = 'X'
+            
     def draw_O(self, column, row):
-        size = 184
-        size_O = 150
-        x = 17 + size * column
-        y = 17 + size * row
-        self.field.create_oval(x, y, x + size_O, y + size_O, width=10, outline=PINK)
+        if self.field_condition[row][column] == None:
+            size = 184
+            size_O = 150
+            x = 17 + size * column
+            y = 17 + size * row
+            self.field.create_oval(x, y, x + size_O, y + size_O, width=10, outline=PINK)
+            self.field_condition[row][column] = 'O'
 
     def add_X(self, event):
         size = 184
