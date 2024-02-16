@@ -41,11 +41,11 @@ class Game(customtkinter.CTk):
         attendantlabel_font = CTkFont(family='Open San', size=20, weight='bold')
         buttons_font = CTkFont(family='Open San', size=18, weight='normal')
         #GameTitle image
-        self.title_image = CTkImage(dark_image=IMG.open('assets/gametitle.png'), size=(450, 200))
+        self.gametitle_image = CTkImage(dark_image=IMG.open('assets/gametitle.png'), size=(450, 200))
         #Labels
         self.authorname_label = customtkinter.CTkLabel(self, text='by Anton Dziura')
         self.attendant_label = customtkinter.CTkLabel(master=self, text='', font=attendantlabel_font)
-        self.gameTitle_label = customtkinter.CTkLabel(master=self, text='', image=self.title_image)
+        self.gameTitle_label = customtkinter.CTkLabel(master=self, text='', image=self.gametitle_image)
         #Buttons properties
         menubuttons_width = 220
         menubuttons_height = 100
