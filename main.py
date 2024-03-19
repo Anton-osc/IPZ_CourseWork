@@ -1,11 +1,11 @@
-import tkinter
 from PIL import Image as IMG
 from customtkinter import CTkImage
 from customtkinter import CTkFont
 import customtkinter
 from tkinter import *
-from tkinter import ttk
 import sys
+import threading
+import socket
 
 #Const
 DARKBLUE = '#10041C'
@@ -207,7 +207,42 @@ class Game(customtkinter.CTk):
 
     def playOnline(self):
         self.destroy_objects()
+        self.draw_field()
+        self.turn = 'X'
+        self.you = 'X'
+        self.opponent = 'O'
+        #self.whowin
+        self.game_over = False
 
+        self.counter = 0
+
+    def host_game(self, host, port):
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.bind((host, port))
+        server.listen(1)
+
+        client, addr = server.accept()
+
+        self.you = 'X'
+        self.opponent = 'O'
+        threading.Thread(target=self.handle_connection, args=(client,)).start()
+        server.close()
+
+    def connect_game(self, host, port):
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((host, port))
+
+        self.you = 'O'
+        self.opponent = 'X'
+        threading.Thread(target=self.handle_connection, args=(client,)).start()
+
+    def handle_connection(self, client):
+        while not self.game_over:
+            if self.turn == self.you:
+                self.attendant_label.configure(text='Ваш хід:')
+                
+
+        
     def exitGame(self):
         sys.exit()
 
