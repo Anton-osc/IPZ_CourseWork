@@ -4,8 +4,6 @@ from customtkinter import CTkFont
 import customtkinter
 from tkinter import *
 import sys
-import threading
-import socket
 
 #Const
 DARKBLUE = '#10041C'
@@ -54,16 +52,14 @@ class Game(customtkinter.CTk):
         self.returnmainmenu_button = customtkinter.CTkButton(master=self, text='Назад', command=self.return_mainmenu, width=50, height=30)
         self.restartgame_button = customtkinter.CTkButton(master=self, text='Грати ще', command=self.restart_game, width=70, height=30)
         self.twoPlayers_button = customtkinter.CTkButton(master=self, text='Грати на одному ПК'.upper(), command=self.twoPlayers, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
-        self.playOnline_button = customtkinter.CTkButton(master=self, text='Грати онлайн'.upper(), command=self.playOnline, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
         self.exit_button = customtkinter.CTkButton(master=self, text='Вийти'.upper(), command=self.exitGame, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
         #Place labels
         self.authorname_label.place(relx=0.92, rely=0.98, anchor=customtkinter.CENTER)
         self.attendant_label.place(relx=0.5, rely=0.05, anchor=customtkinter.CENTER)
         self.gameTitle_label.place(relx=0.5, rely=0.1, anchor=customtkinter.CENTER)
         #Place Mainmenu-buttons
-        self.twoPlayers_button.place(relx=0.5, rely=0.35, anchor=customtkinter.CENTER)
-        self.playOnline_button.place(relx=0.5, rely=0.6, anchor=customtkinter.CENTER)
-        self.exit_button.place(relx=0.5, rely=0.85, anchor=customtkinter.CENTER)
+        self.twoPlayers_button.place(relx=0.5, rely=0.40, anchor=customtkinter.CENTER)
+        self.exit_button.place(relx=0.5, rely=0.75, anchor=customtkinter.CENTER)
         #Vars
         self.coordsfinishlines = {2:{0:[0, 0, 550, 550],          #main_diag
                                   1:[550, 0, 0, 550]},            #second_diag
@@ -75,7 +71,7 @@ class Game(customtkinter.CTk):
                                   2:[458.35, 550, 458.35, 0]}}    #third_col}
         self.whowin = None
         self.move_control = 1
-        self.menuobjects = [self.authorname_label, self.gameTitle_label, self.twoPlayers_button, self.playOnline_button, self.exit_button]
+        self.menuobjects = [self.authorname_label, self.gameTitle_label, self.twoPlayers_button, self.exit_button]
         self.field_condition = [[None] * 3 for _ in range(3)]
         #Create field
         self.field = customtkinter.CTkCanvas(self, width=550, height=550, bg='red')
@@ -87,9 +83,8 @@ class Game(customtkinter.CTk):
 
     def showmainmenu(self):
         self.gameTitle_label.place(relx=0.5, rely=0.1, anchor=customtkinter.CENTER)
-        self.twoPlayers_button.place(relx=0.5, rely=0.35, anchor=customtkinter.CENTER)
-        self.playOnline_button.place(relx=0.5, rely=0.6, anchor=customtkinter.CENTER)
-        self.exit_button.place(relx=0.5, rely=0.85, anchor=customtkinter.CENTER)
+        self.twoPlayers_button.place(relx=0.5, rely=0.40, anchor=customtkinter.CENTER)
+        self.exit_button.place(relx=0.5, rely=0.75, anchor=customtkinter.CENTER)
         self.authorname_label.place(relx=0.92, rely=0.98, anchor=customtkinter.CENTER)
     
     def draw_field(self):
@@ -202,46 +197,9 @@ class Game(customtkinter.CTk):
     def twoPlayers(self):
         self.destroy_objects()
         self.draw_field()
+        self.attendant_label.place(relx=0.5, rely=0.05, anchor=customtkinter.CENTER)
         self.attendant_label.configure(text='Хрестики ходять:')
         self.returnmainmenu_button.place(relx=0.05, rely=0.05, anchor=customtkinter.CENTER)
-
-    def playOnline(self):
-        self.destroy_objects()
-        self.draw_field()
-        self.turn = 'X'
-        self.you = 'X'
-        self.opponent = 'O'
-        #self.whowin
-        self.game_over = False
-
-        self.counter = 0
-
-    def host_game(self, host, port):
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind((host, port))
-        server.listen(1)
-
-        client, addr = server.accept()
-
-        self.you = 'X'
-        self.opponent = 'O'
-        threading.Thread(target=self.handle_connection, args=(client,)).start()
-        server.close()
-
-    def connect_game(self, host, port):
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect((host, port))
-
-        self.you = 'O'
-        self.opponent = 'X'
-        threading.Thread(target=self.handle_connection, args=(client,)).start()
-
-    def handle_connection(self, client):
-        while not self.game_over:
-            if self.turn == self.you:
-                self.attendant_label.configure(text='Ваш хід:')
-                
-
         
     def exitGame(self):
         sys.exit()
