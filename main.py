@@ -4,6 +4,8 @@ from customtkinter import CTkFont
 import customtkinter
 from tkinter import *
 import sys
+import random
+from time import sleep
 
 #Const
 DARKBLUE = '#10041C'
@@ -41,6 +43,7 @@ class Game(customtkinter.CTk):
         #GameTitle image
         self.gametitle_image = CTkImage(dark_image=IMG.open('assets/gametitle.png'), size=(450, 200))
         #Labels
+        self.diffuculty_level_label = customtkinter.CTkLabel(master=self, text='Оберіть рівень складності:', font=attendantlabel_font)
         self.authorname_label = customtkinter.CTkLabel(self, text='by Anton Dziura')
         self.attendant_label = customtkinter.CTkLabel(master=self, text='', font=attendantlabel_font)
         self.gameTitle_label = customtkinter.CTkLabel(master=self, text='', image=self.gametitle_image)
@@ -49,6 +52,9 @@ class Game(customtkinter.CTk):
         menubuttons_height = 100
         menubuttons_font = buttons_font
         #Buttons
+        self.simple_difficulty_level_button = customtkinter.CTkButton(master=self, text='Легкий', command=self.simple_level, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
+        self.hard_difficulty_level_button = customtkinter.CTkButton(master=self, text='Важкий', command=self.hard_level, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
+        self.playwithpc_button = customtkinter.CTkButton(master=self, text='Грати з комп\'ютером'.upper(), command=self.playwithpc, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
         self.returnmainmenu_button = customtkinter.CTkButton(master=self, text='Назад', command=self.return_mainmenu, width=50, height=30)
         self.restartgame_button = customtkinter.CTkButton(master=self, text='Грати ще', command=self.restart_game, width=70, height=30)
         self.twoPlayers_button = customtkinter.CTkButton(master=self, text='Грати на одному ПК'.upper(), command=self.twoPlayers, width=menubuttons_width, height=menubuttons_height, font=menubuttons_font)
@@ -58,8 +64,9 @@ class Game(customtkinter.CTk):
         self.attendant_label.place(relx=0.5, rely=0.05, anchor=customtkinter.CENTER)
         self.gameTitle_label.place(relx=0.5, rely=0.1, anchor=customtkinter.CENTER)
         #Place Mainmenu-buttons
-        self.twoPlayers_button.place(relx=0.5, rely=0.40, anchor=customtkinter.CENTER)
-        self.exit_button.place(relx=0.5, rely=0.75, anchor=customtkinter.CENTER)
+        self.playwithpc_button.place(relx=0.5, rely=0.30, anchor=customtkinter.CENTER)
+        self.twoPlayers_button.place(relx=0.5, rely=0.55, anchor=customtkinter.CENTER)
+        self.exit_button.place(relx=0.5, rely=0.80, anchor=customtkinter.CENTER)
         #Vars
         self.coordsfinishlines = {2:{0:[0, 0, 550, 550],          #main_diag
                                   1:[550, 0, 0, 550]},            #second_diag
@@ -70,8 +77,9 @@ class Game(customtkinter.CTk):
                                   1:[275, 0, 275, 550],           #second_col
                                   2:[458.35, 550, 458.35, 0]}}    #third_col}
         self.whowin = None
+        self.game_with_pc = None
         self.move_control = 1
-        self.menuobjects = [self.authorname_label, self.gameTitle_label, self.twoPlayers_button, self.exit_button]
+        self.menuobjects = [self.authorname_label, self.gameTitle_label, self.twoPlayers_button, self.exit_button, self.playwithpc_button, self.diffuculty_level_label, self.simple_difficulty_level_button, self.hard_difficulty_level_button, self.returnmainmenu_button, self.restartgame_button]
         self.field_condition = [[None] * 3 for _ in range(3)]
         #Create field
         self.field = customtkinter.CTkCanvas(self, width=550, height=550, bg='red')
@@ -83,8 +91,9 @@ class Game(customtkinter.CTk):
 
     def showmainmenu(self):
         self.gameTitle_label.place(relx=0.5, rely=0.1, anchor=customtkinter.CENTER)
-        self.twoPlayers_button.place(relx=0.5, rely=0.40, anchor=customtkinter.CENTER)
-        self.exit_button.place(relx=0.5, rely=0.75, anchor=customtkinter.CENTER)
+        self.playwithpc_button.place(relx=0.5, rely=0.30, anchor=customtkinter.CENTER)
+        self.twoPlayers_button.place(relx=0.5, rely=0.55, anchor=customtkinter.CENTER)
+        self.exit_button.place(relx=0.5, rely=0.80, anchor=customtkinter.CENTER)
         self.authorname_label.place(relx=0.92, rely=0.98, anchor=customtkinter.CENTER)
     
     def draw_field(self):
@@ -123,29 +132,56 @@ class Game(customtkinter.CTk):
             self.move_control += 1
             self.detectwin()
 
-    def whosemove(self, event):
+    def computermove(self):
+        self.detectwin()
         if self.whowin == None:
+            while True:
+                row = random.randint(0, 2)
+                colum = random.randint(0, 2)
+                if self.field_condition[row][colum] == None:
+                    self.draw_O(colum, row)
+                    self.attendant_label.configure(text='Ваш хід:')
+                    self.detectwin()
+                    break
+
+
+    def whosemove(self, event):
+        if self.whowin == None and self.game_with_pc == False:
             size = 184
             colum = event.x // size
             row = event.y // size
-            if self.move_control % 2 == 0:
+            if self.move_control % 2 == 0 and self.field_condition[row][colum] == None:
                 self.attendant_label.configure(text='Хрестики ходять:')
                 self.draw_O(colum, row)
-            else:
+            elif self.move_control % 2 != 0 and self.field_condition[row][colum] == None:
                 self.attendant_label.configure(text='Нолики ходять:')
                 self.draw_X(colum, row)
+
+        elif self.whowin == None and self.game_with_pc == True:
+            size = 184
+            colum = event.x // size
+            row = event.y // size
+            if self.move_control % 2 != 0 and self.field_condition[row][colum] == None:
+                self.draw_X(colum, row)
+                self.attendant_label.configure(text='Комп’ютер ходить:')
+                self.detectwin()
+                self.after(1000, self.computermove)
+                
 
     def detectwin(self):
         transposed = transpose_matrix(self.field_condition)
         main_diagonal, secondary_diagonal = extract_diagonals(self.field_condition)
-        self.detectline(self.field_condition[0], 0, 0)
-        self.detectline(self.field_condition[1], 0, 1)
-        self.detectline(self.field_condition[2], 0, 2)
-        self.detectline(transposed[0], 1, 0)
-        self.detectline(transposed[1], 1, 1)
-        self.detectline(transposed[2], 1, 2)
-        self.detectline(main_diagonal, 2, 0)
-        self.detectline(secondary_diagonal, 2, 1)
+        try:
+            self.detectline(self.field_condition[0], 0, 0)
+            self.detectline(self.field_condition[1], 0, 1)
+            self.detectline(self.field_condition[2], 0, 2)
+            self.detectline(transposed[0], 1, 0)
+            self.detectline(transposed[1], 1, 1)
+            self.detectline(transposed[2], 1, 2)
+            self.detectline(main_diagonal, 2, 0)
+            self.detectline(secondary_diagonal, 2, 1)
+        except:
+            pass
         self.detect_draw()
 
     def detect_draw(self):
@@ -155,6 +191,7 @@ class Game(customtkinter.CTk):
                 if None not in line:
                     count_draw += 1
             if count_draw == 3:
+                self.whowin = 'draw'
                 self.attendant_label.configure(text='Нічия')
                 self.restartgame_button.place(relx=0.5, rely=0.95, anchor=customtkinter.CENTER)
             
@@ -162,16 +199,25 @@ class Game(customtkinter.CTk):
         #state_m regular[0], transposed[1], diagonal[2]
         #state_d which row[0,1,2] or diagonal[0,1]
         if set(line) == set('X'):
-            self.attendant_label.configure(text='Хрестики виграли!')
+            if self.game_with_pc == True:
+                self.attendant_label.configure(text='Ви виграли!')
+            elif self.game_with_pc == False:
+                self.attendant_label.configure(text='Хрестики виграли!')
             self.whowin = 'X'
             self.drawfinishline(state_m, state_d)
             self.restartgame_button.place(relx=0.5, rely=0.95, anchor=customtkinter.CENTER)
+            raise Exception('Win')
+        
         if set(line) == set('O'):
-            self.attendant_label.configure(text='Нолики виграли!')
+            if self.game_with_pc == True:
+                self.attendant_label.configure(text='Комп’ютер виграв!')
+            elif self.game_with_pc == False:
+                self.attendant_label.configure(text='Нолики виграли!')
             self.whowin = 'O'
             self.drawfinishline(state_m, state_d)
             self.restartgame_button.place(relx=0.5, rely=0.95, anchor=customtkinter.CENTER)
-
+            raise Exception('Win')
+        
     def drawfinishline(self, state_m, state_d):
         x, y, end_x, end_y = self.coordsfinishlines[state_m][state_d]
         self.field.create_line(x, y, end_x, end_y, width=10, fill='white')
@@ -181,6 +227,9 @@ class Game(customtkinter.CTk):
         self.move_control = 1
         self.field_condition = [[None] * 3 for _ in range(3)]
         self.returnmainmenu_button.place_forget()
+        self.hard_difficulty_level_button.place_forget()
+        self.simple_difficulty_level_button.place_forget()
+        self.diffuculty_level_label.place_forget()
         self.attendant_label.place_forget()
         self.field.place_forget()
         self.restartgame_button.place_forget()
@@ -191,10 +240,34 @@ class Game(customtkinter.CTk):
         self.move_control = 1
         self.field_condition = [[None] * 3 for _ in range(3)]
         self.draw_field()
-        self.attendant_label.configure(text='Хрестики ходять:')
+        if self.game_with_pc == True:
+            self.attendant_label.configure(text='Ваш хід:')
+        elif self.game_with_pc == False:
+            self.attendant_label.configure(text='Хрестики ходять:') 
         self.restartgame_button.place_forget()
 
+    def playwithpc(self):
+        self.destroy_objects()
+        self.diffuculty_level_label.place(relx=0.5, rely=0.05, anchor=customtkinter.CENTER)
+        self.simple_difficulty_level_button.place(relx=0.5, rely=0.40, anchor=customtkinter.CENTER)
+        self.hard_difficulty_level_button.place(relx=0.5, rely=0.65, anchor=customtkinter.CENTER)
+        self.returnmainmenu_button.place(relx=0.05, rely=0.05, anchor=customtkinter.CENTER)
+
+    def simple_level(self):
+        self.game_with_pc = True
+        self.destroy_objects()
+        self.returnmainmenu_button.place(relx=0.05, rely=0.05, anchor=customtkinter.CENTER)
+        self.draw_field()
+        self.attendant_label.place(relx=0.5, rely=0.05, anchor=customtkinter.CENTER)
+        self.attendant_label.configure(text='Ваш хід:')
+
+    def hard_level(self):
+        self.game_with_pc = True
+        self.destroy_objects()
+        self.returnmainmenu_button.place(relx=0.05, rely=0.05, anchor=customtkinter.CENTER)
+
     def twoPlayers(self):
+        self.game_with_pc = False
         self.destroy_objects()
         self.draw_field()
         self.attendant_label.place(relx=0.5, rely=0.05, anchor=customtkinter.CENTER)
